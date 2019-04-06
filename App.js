@@ -6,14 +6,14 @@ import { GameLoop } from "react-native-game-engine";
 
 const { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
 const RADIUS = 12;
-const MAXSCORE = 20;
+const MAXSCORE = 50;
 const VICTORYSCORE = MAXSCORE / 2;
-const VALIDCOLORS = ['#fff', '#000', '#f00', '#0ff'];
-const STARTSPEED = 0.35;
-const SPEEDDELTA = 1.3;
+const VALIDCOLORS = ['#fff', '#000', '#f00'];
+const STARTSPEED = 0.3;
+const SPEEDDELTA = 1.11;
 
 const randomColor = () => VALIDCOLORS[Math.floor(Math.random() * VALIDCOLORS.length)];
-const randomX = () => Math.floor(Math.random() * (WIDTH - 100));
+const randomX = () => Math.floor(Math.random() * (WIDTH - (WIDTH/4) - 100));
 
 class Pill extends PureComponent {
   render() {
@@ -105,10 +105,18 @@ export default class App extends React.Component {
   }
 
   numToText = (n) => {
-    const translate = [
+    const uptonineteen = [
       'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
-      'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'
-    ];
+      'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+    ], 
+      aftertwentyparts = [ 
+        '', '-one', '-two', '-three', '-four', '-five', '-six', '-seven', '-eight', '-nine'
+      ],
+      tens = [ 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'],
+      translate = [
+        ...uptonineteen
+      ];
+    tens.forEach(t => aftertwentyparts.forEach(a => translate.push(`${t}${a}`)));
     if (n < translate.length) {
       return translate[n];
     }

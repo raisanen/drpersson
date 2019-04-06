@@ -6,15 +6,14 @@ import { GameLoop } from "react-native-game-engine";
 
 const { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
 const RADIUS = 12;
-const MAXSCORE = 10;
+const MAXSCORE = 20;
 const VICTORYSCORE = MAXSCORE / 2;
-const VALIDCOLORS = ['#fff', '#000', '#f00', '#0f0', '#0ff', '#00f'];
+const VALIDCOLORS = ['#fff', '#000', '#f00', '#0ff'];
 const STARTSPEED = 0.35;
-const SPEEDDELTA = 1.22;
+const SPEEDDELTA = 1.3;
 
 const randomColor = () => VALIDCOLORS[Math.floor(Math.random() * VALIDCOLORS.length)];
 const randomX = () => Math.floor(Math.random() * (WIDTH - 100));
-
 
 class Pill extends PureComponent {
   render() {

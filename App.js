@@ -9,8 +9,8 @@ const RADIUS = 12;
 const MAXSCORE = 50;
 const VICTORYSCORE = MAXSCORE / 2;
 const VALIDCOLORS = ['#fff', '#000', '#f00'];
-const STARTSPEED = 0.3;
-const SPEEDDELTA = 1.25;
+const STARTSPEED = 0.3333;
+const SPEEDDELTA = 1.3333;
 
 const randomColor = () => VALIDCOLORS[Math.floor(Math.random() * VALIDCOLORS.length)];
 const randomX = () => Math.floor(Math.random() * (WIDTH - (WIDTH/4) - 100));
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   gameover: {
     left: 0,
     width: WIDTH,
-    top: HEIGHT / 2 - 50,
+    top: HEIGHT / 3,
   },
   header: {
     top: 50,

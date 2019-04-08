@@ -53,7 +53,7 @@ export class PerssonSound {
         }
         try {
             await this.sound.setStatusAsync({ isLooping: loop, volume: volume });
-            await this.sound.playAsync();    
+            await this.sound.playFromPositionAsync(0); 
         } catch (e) {
             console.log(e);
         } finally {
@@ -85,11 +85,8 @@ export class PerssonPlayer {
         };
     }
 
-    async play(name, pauseOther = null) {
-        if (pauseOther && this.sounds.hasOwnProperty(pauseOther)) {
-            await this.sounds[pauseOther].pause();
-        }
-        await this.sounds[name].play();
+    async play(name, loop = false, volume = 0.8) {
+        await this.sounds[name].play(loop, volume);
     }
 
     async pause(name) {

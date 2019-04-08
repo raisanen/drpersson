@@ -263,7 +263,7 @@ export default class App extends PureComponent {
 
   playTheme = () => {
     this.setState({ themePlaying: true });
-    this.soundPlayer.play('theme');
+    this.soundPlayer.play('theme', true, 0.4);
   };
 
   pauseTheme = () => {

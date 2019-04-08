@@ -4,9 +4,9 @@ import { GameLoop } from 'react-native-game-engine';
 import { Font } from 'expo';
 import Matter from "matter-js";
 
-import { colliders, Pill, Beaker, Persson, Ground, makePill, randomColors } from './src/components';
+import { colliders, Pill, Beaker, Persson, Ground, makePill, randomColors, styles as componentStyles } from './src/components';
 import { PerssonPlayer } from './src/sound';
-import { WIDTH, HEIGHT } from './src/constants';
+import { WIDTH, HEIGHT, MAXSCORE, WINNINGSCORE, INITIALGRAVITY, DELTASPEED } from './src/constants';
 
 const styles = StyleSheet.create({
   container: {
@@ -33,11 +33,13 @@ const styles = StyleSheet.create({
     fontFamily: 'space-grotesk-regular',
   },
   footer: {
-    bottom: 15,
-    right: 15,
-    fontSize: 32,
-    fontFamily: 'space-grotesk-bold'
+    bottom: 5,
+    left: 15,
   },
+  footerButton: {
+    fontFamily: 'space-grotesk-bold',
+    padding: 10,
+  }
 });
 
 const numToText = (n) => {
@@ -61,7 +63,7 @@ const engine = Matter.Engine.create(),
 
 engine.world.gravity = { x: 0, y: 0 };
 
-colliders.forEach((c) => Matter.World.addBody(c));
+colliders.forEach((c) => Matter.World.addBody(world, c));
 Matter.Runner.run(runner, engine);
 
 
@@ -80,7 +82,8 @@ export default class App extends PureComponent {
     pillsLeft: MAXSCORE,
     pills: [],
     personOffset: {},
-    personEyebrow: {}
+    personEyebrow: {},
+    themePlaying: false
   };
   
   soundPlayer = new PerssonPlayer();
@@ -129,23 +132,23 @@ export default class App extends PureComponent {
         if (objB === 'pill' && objA === 'beaker') {
           this.updatePills(bodyB, true);
         } else if (objB === 'pill' && objA === 'collider') {
-          this.playSound('jump');
+          this.soundPlayer.play('jump');
         } else if (objB === 'pill' && objA === 'ground') {
           this.updatePills(bodyB);
         }
       }
     });
 
-    // Matter.Events.on(engine, 'beforeUpdate', (ev) => {
-    //   this.setState({
-    //     pills: this.state.pills.map((p) => {
-    //       return {
-    //         ...p,
-    //         body: { ...world.bodies.find(b => b.id === p.body.id) }
-    //       }
-    //     })
-    //   });
-    // });
+    Matter.Events.on(engine, 'beforeUpdate', (ev) => {
+      this.setState({
+        pills: this.state.pills.map((p) => {
+          return {
+            ...p,
+            body: { ...world.bodies.find(b => b.id === p.body.id) }
+          }
+        })
+      });
+    });
   }
 
   async componentDidMount() {
@@ -154,9 +157,9 @@ export default class App extends PureComponent {
       'space-grotesk-regular': require('./assets/fonts/SpaceGrotesk-Regular.ttf')
     });
 
-    await this.soundPlayer.play('theme');
 
     this.setState({ fontsLoaded: true });
+    this.playTheme();
 
     setTimeout(() => this.started(), 3000);
   }
@@ -226,8 +229,8 @@ export default class App extends PureComponent {
       2, 2, -3, 5, -3, 2, -1, 0,
     ].forEach((v, i) => {
       setTimeout(() => this.setState({ 
-        personOffset: { top: styles.perssonHead.top + v },
-        personEyebrow: { top: styles.personEyebrow.top + v, transform: [ {rotate: i + 'deg' } ]}
+        personOffset: { top: componentStyles.perssonHead.top + v },
+        personEyebrow: { top: componentStyles.personEyebrow.top + v, transform: [ {rotate: i + 'deg' } ]}
       }), 70 * i);
     });
   };
@@ -239,8 +242,8 @@ export default class App extends PureComponent {
       0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6
     ].forEach((v, i) => {
       setTimeout(() => this.setState({ 
-        personOffset: { top: styles.perssonHead.top + v },
-        personEyebrow: { top: styles.personEyebrow.top + v, transform: [ {rotate: (-i) + 'deg' } ]} 
+        personOffset: { top: componentStyles.perssonHead.top + v },
+        personEyebrow: { top: componentStyles.personEyebrow.top + v, transform: [ {rotate: (-i) + 'deg' } ]} 
       }), 70 * i);
     });
   };
@@ -253,34 +256,46 @@ export default class App extends PureComponent {
       -5,
     ].forEach((v, i) => {
       setTimeout(() => this.setState({ 
-        personEyebrow: { top: styles.personEyebrow.top + v } 
+        personEyebrow: { top: componentStyles.personEyebrow.top + v } 
       }), 50 * i);
     });
   };
 
+  playTheme = () => {
+    this.setState({ themePlaying: true });
+    this.soundPlayer.play('theme');
+  };
+
+  pauseTheme = () => {
+    this.setState({ themePlaying: false });
+    this.soundPlayer.pause('theme');
+  };
+
   // Subcomponents
   startscreen = () => {
-    return !this.state.fontsLoaded ? <Text>Loading...</Text> : (
-      <View style={[styles.text, { top: HEIGHT / 3 }]}>
-        <Text style={{ textAlign: 'center', fontSize: 48, fontFamily: 'space-grotesk-bold' }}>
-          dr. persson
-          </Text>
-        <TouchableHighlight onPress={this.init}>
-          <View style={{ backgroundColor: '#fff', padding: 15, paddingBottom: 20, margin: 15 }}>
-            <Text style={{ textAlign: 'center', fontSize: 32, fontFamily: 'space-grotesk-regular' }}>
-              start game
-                </Text>
-          </View>
-        </TouchableHighlight>
-      </View>
-    );
+    return !(this.state.fontsLoaded)
+      ? <Text>Loading...</Text> 
+      : (
+        <View style={[styles.text, { top: HEIGHT / 3 }]}>
+          <Text style={{ textAlign: 'center', fontSize: 48, fontFamily: 'space-grotesk-bold' }}>
+            dr. persson
+            </Text>
+          <TouchableHighlight onPress={this.init}>
+            <View style={{ backgroundColor: '#fff', padding: 15, paddingBottom: 20, margin: 15 }}>
+              <Text style={{ textAlign: 'center', fontSize: 32, fontFamily: 'space-grotesk-regular' }}>
+                start game
+                  </Text>
+            </View>
+          </TouchableHighlight>
+        </View>
+      );
   };
 
   scoreboard = () => {
     const scoreText = numToText(this.state.score),
       pillsText = numToText(this.state.pillsLeft + 1);
 
-    return !this.state.fontsLoaded ? null : (
+    return !(this.state.fontsLoaded && this.state.gameState === GAMESTATES.started) ? null : (
       <View style={[styles.text, styles.header]}>
         <Text>score:</Text>
         <Text style={{ fontFamily: 'space-grotesk-bold', marginTop: -5 }}>{scoreText}</Text>
@@ -291,7 +306,7 @@ export default class App extends PureComponent {
   };
 
   gameover = () => {
-    return !this.state.fontsLoaded ? null : (
+    return !(this.state.fontsLoaded && (this.state.gameState === GAMESTATES.won || this.state.gameState === GAMESTATES.lost)) ? null : (
       <View style={[styles.text, styles.gameover]}>
         <Text style={{ textAlign: 'center', fontSize: 48, fontFamily: 'space-grotesk-bold' }}>
           Score: {this.state.score}
@@ -307,27 +322,36 @@ export default class App extends PureComponent {
     );
   };
 
+  footer = () => {
+    return !(this.state.fontsLoaded) ? null : (
+      <View style={[styles.text, styles.footer]}>
+          <TouchableHighlight onPress={this.state.themePlaying ? this.pauseTheme : this.playTheme}>
+          <Text style={styles.footerButton}>
+            {this.state.themePlaying ? 'no music' : 'music'}
+          </Text>
+        </TouchableHighlight>
+      </View>
+    )
+  }
+
   render() {
     const state = this.state.gameState;
 
     return (
       <GameLoop style={styles.container} onUpdate={this.updateHandler}>
-        {state === GAMESTATES.started ? null :
-          <Persson offset={this.state.personOffset} eyebrow={this.state.personEyebrow} />
+        {this.state.gameState === GAMESTATES.init && this.startscreen()}
+        {this.gameover()}
+
+        {state === GAMESTATES.started 
+          ? this.scoreboard()
+          :  <Persson offset={this.state.personOffset} eyebrow={this.state.personEyebrow} />
         }
-
-        {state !== GAMESTATES.init ? null : this.startscreen()}
-
-        {!(state === GAMESTATES.won || state === GAMESTATES.lost) ? null : this.gameover()}
-
-        {state !== GAMESTATES.started ? null : this.scoreboard()}
-        
         {this.state.pills.map((p, i) => {
           return (<Pill key={'pill-' + i} body={p.body} colors={p.colors} />);
         })}
-
-        {state !== GAMESTATES.started ? null : <Beaker /> }
-        {state !== GAMESTATES.started ? null : <Ground /> }
+        {state === GAMESTATES.started && <Beaker/>}
+        {state === GAMESTATES.started && <Ground/>}
+        {state === GAMESTATES.started && this.footer()}
       </GameLoop>
     );
   }

@@ -2,9 +2,12 @@ import React, { PureComponent } from 'react';
 import { StyleSheet, View, Image } from "react-native";
 import { WIDTH, HEIGHT, RADIUS, VALIDCOLORS } from './constants';
 
+import Matter from 'matter-js';
+
 const PILLwIDTH = RADIUS * 5;
 const PILLHEIGHT = RADIUS * 2;
 
+const BEAKERBOTTOM = 50;
 const BEAKERWIDTH = WIDTH / 3;
 const BEAKERHEIGHT = BEAKERWIDTH * 1.105;
 const REALBEAKERWIDTH = (BEAKERWIDTH * 0.9)
@@ -13,6 +16,77 @@ const LEFTCOLLIDERHEIGHT = BEAKERHEIGHT;
 const RIGHTCOLLIDERWITH = (BEAKERWIDTH - REALBEAKERWIDTH) * 2;
 const BOTTOMCOLLIDERWIDTH = REALBEAKERWIDTH;
 const BOTTOMCOLLIDERHEIGHT = LEFTCOLLIDERWIDTH;
+
+const perssonRatio = (WIDTH / 4) / 406;
+
+export const styles = StyleSheet.create({
+    persson: {
+        position: 'absolute',
+        left: WIDTH / 2 - (406 * perssonRatio) / 2,
+        bottom: 50,
+        width: 406 * perssonRatio,
+        height: 587 * perssonRatio
+    },
+    perssonHead: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: 406 * perssonRatio,
+        height: 395 * perssonRatio,
+    },
+    personBody: {
+        position: 'absolute',
+        top: 300 * perssonRatio,
+        left: 35 * perssonRatio,
+        width: 356 * perssonRatio,
+        height: 265 * perssonRatio,
+    },
+    personEyebrow: {
+        position: 'absolute',
+        top: 160 * perssonRatio,
+        left: 225 * perssonRatio,
+        width: 103 * perssonRatio,
+        height: 20 * perssonRatio
+    },
+    beaker: {
+        height: BEAKERHEIGHT,
+        width: BEAKERWIDTH,
+        position: 'absolute',
+        bottom: BEAKERBOTTOM,
+        right: 20
+    },
+    pill: {
+        borderRadius: RADIUS * 2,
+        width: PILLwIDTH,
+        height: PILLHEIGHT,
+        backgroundColor: "transparent",
+        position: 'absolute',
+    },
+    side: {
+        position: "absolute",
+        top: 0,
+        width: RADIUS * 2.5,
+        height: RADIUS * 2,
+    },
+    left: {
+        left: 0,
+        borderTopLeftRadius: RADIUS,
+        borderBottomLeftRadius: RADIUS,
+    },
+    right: {
+        right: 0,
+        borderTopRightRadius: RADIUS,
+        borderBottomRightRadius: RADIUS,
+    },
+    ground: {
+        position: 'absolute',
+        left: 0,
+        bottom: 0,
+        width: WIDTH,
+        height: BEAKERBOTTOM - 1,
+        backgroundColor: '#fff'
+    }
+});
 
 //#region Matter-objects:
 const colliderSettings = { isStatic: true, friction: 0.2, restitution: 1, label: 'collider' };
@@ -47,72 +121,8 @@ const images = {
     beaker: require('../assets/images/beaker.png')
 };
 
-
-const perssonRatio = (WIDTH / 4) / 406;
-
-const styles = StyleSheet.create({
-    persson: {
-        position: 'absolute',
-        left: WIDTH / 2 - (406 * perssonRatio) / 2,
-        bottom: 50,
-        width: 406 * perssonRatio,
-        height: 587 * perssonRatio
-    },
-    perssonHead: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: 406 * perssonRatio,
-        height: 395 * perssonRatio,
-    },
-    personBody: {
-        position: 'absolute',
-        top: 300 * perssonRatio,
-        left: 35 * perssonRatio,
-        width: 356 * perssonRatio,
-        height: 265 * perssonRatio,
-    },
-    personEyebrow: {
-        position: 'absolute',
-        top: 160 * perssonRatio,
-        left: 225 * perssonRatio,
-        width: 103 * perssonRatio,
-        height: 20 * perssonRatio
-    },
-    beaker: {
-        height: BEAKERHEIGHT,
-        width: BEAKERWIDTH,
-        position: 'absolute',
-        bottom: 20,
-        right: 20
-    },
-    pill: {
-        borderRadius: RADIUS * 2,
-        width: PILLwIDTH,
-        height: PILLHEIGHT,
-        backgroundColor: "transparent",
-        position: 'absolute',
-    },
-    side: {
-        position: "absolute",
-        top: 0,
-        width: RADIUS * 2.5,
-        height: RADIUS * 2,
-    },
-    left: {
-        left: 0,
-        borderTopLeftRadius: RADIUS,
-        borderBottomLeftRadius: RADIUS,
-    },
-    right: {
-        right: 0,
-        borderTopRightRadius: RADIUS,
-        borderBottomRightRadius: RADIUS,
-    },
-});
-
 const randomColor = () => VALIDCOLORS[Math.floor(Math.random() * VALIDCOLORS.length)];
-const randomX = () => Math.floor(Math.random() * (WIDTH - (WIDTH / 2) - 100));
+const randomX = () => Math.floor(Math.random() * (WIDTH - PILLwIDTH));
 
 export const makePill = (density = 0.001) => {
     return Matter.Bodies.rectangle(
@@ -181,7 +191,7 @@ export class Persson extends PureComponent {
 export class Ground extends PureComponent {
     render() {
         return (
-            <View style={{ position: 'absolute', left: 0, bottom: 0, width: WIDTH, height: styles.beaker.bottom - 5, backgroundColor: '#fff' }} />
+            <View style={styles.ground} />
         )
     }
 }

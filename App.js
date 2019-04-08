@@ -221,7 +221,7 @@ export default class App extends PureComponent {
 
   // Animations:
   victory = () => {
-    this.soundPlayer.play('flagpole', true);
+    this.soundPlayer.play('flagpole');
 
     [
       2, 2, -5, 5, -5, 2, -2, 5,
@@ -236,7 +236,7 @@ export default class App extends PureComponent {
   };
 
   lost = () => {
-    this.soundPlayer.play('die', true);
+    this.soundPlayer.play('die');
 
     [
       0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6

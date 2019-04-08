@@ -1,19 +1,16 @@
 import React, { PureComponent } from 'react';
 import { StyleSheet, Dimensions, Text, View, TouchableHighlight, Image } from "react-native";
-import { Font, Audio } from 'expo';
-
-// import * as Animatable from 'react-native-animatable';
-
-import Matter from "matter-js";
 import { GameLoop } from "react-native-game-engine";
+import { Font, Audio } from 'expo';
+import Matter from "matter-js";
 
 const { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
 const RADIUS = 12;
-const MAXSCORE = 30;
+const MAXSCORE = 12;
 const WINNINGSCORE = MAXSCORE / 2;
 const VALIDCOLORS = ['#fff', '#000', '#f00'];
 
-const INITIALGRAVITY = 0.09;
+const INITIALGRAVITY = 0.1;
 const DELTASPEED = 1.1;
 
 const PILLwIDTH = RADIUS * 5;
@@ -57,6 +54,13 @@ const styles = StyleSheet.create({
     left: 35 * perssonRatio,
     width: 356 * perssonRatio,
     height: 265 * perssonRatio,
+  },
+  personEyebrow: {
+    position: 'absolute',
+    top: 160 * perssonRatio,
+    left: 225 * perssonRatio,
+    width: 103 * perssonRatio,
+    height: 20 * perssonRatio
   },
   absolute: {
     position: 'absolute',
@@ -116,26 +120,8 @@ const styles = StyleSheet.create({
   },
 });
 
-
-const colliderSettings = { isStatic: true, friction: 0.2 };
-
-const colliderLeft = Matter.Bodies.rectangle(
-  WIDTH - BEAKERWIDTH - styles.beaker.right + (LEFTCOLLIDERWIDTH * 4), (HEIGHT - BEAKERHEIGHT - styles.beaker.bottom) + LEFTCOLLIDERHEIGHT / 2, LEFTCOLLIDERWIDTH, LEFTCOLLIDERHEIGHT,
-  {... colliderSettings, restitution: 1, label: 'collider' }
-);
-const colliderRight = Matter.Bodies.rectangle(
-  WIDTH - styles.beaker.right - (BEAKERWIDTH - REALBEAKERWIDTH) + (RIGHTCOLLIDERWITH / 2), (HEIGHT - BEAKERHEIGHT - styles.beaker.bottom) + LEFTCOLLIDERHEIGHT / 2, RIGHTCOLLIDERWITH, LEFTCOLLIDERHEIGHT,
-  {... colliderSettings, restitution: 1, label: 'collider' }
-);
-const colliderBottom = Matter.Bodies.rectangle(
-  WIDTH - BEAKERWIDTH - styles.beaker.right + (BOTTOMCOLLIDERWIDTH / 2), HEIGHT - styles.beaker.bottom, BOTTOMCOLLIDERWIDTH, BOTTOMCOLLIDERHEIGHT,
-  {... colliderSettings, restitution: 0, label: 'beaker' }
-);
-
 const randomColor = () => VALIDCOLORS[Math.floor(Math.random() * VALIDCOLORS.length)];
 const randomX = () => Math.floor(Math.random() * (WIDTH - (WIDTH / 4) - 100));
-
-
 const makePill = (density = 0.001) => {
   return Matter.Bodies.rectangle(
     randomX(),
@@ -152,29 +138,38 @@ const makePill = (density = 0.001) => {
     }
   );
 };
-
 const numToText = (n) => {
   const uptonineteen = [
-    'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
-    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
-  ],
-    aftertwentyparts = [
-      '', '-one', '-two', '-three', '-four', '-five', '-six', '-seven', '-eight', '-nine'
+      'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+      'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
     ],
+    aftertwentyparts = [ '', '-one', '-two', '-three', '-four', '-five', '-six', '-seven', '-eight', '-nine' ],
     tens = ['twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'],
-    translate = [
-      ...uptonineteen
-    ];
+    translate = [ ...uptonineteen ];
 
   tens.forEach(t => aftertwentyparts.forEach(a => translate.push(`${t}${a}`)));
-  if (n < translate.length) {
-    return translate[n];
-  }
-  return 'infinite';
+
+  return (n < translate.length) ? translate[n] : 'infinite';
 };
 
 
-const ground = Matter.Bodies.rectangle(WIDTH / 2, HEIGHT - styles.beaker.bottom + 15 + HEIGHT, WIDTH * 50, HEIGHT * 2, { isStatic: true, label: 'ground' });
+const colliderSettings = { isStatic: true, friction: 0.2, restitution: 1, label: 'collider' };
+const colliderLeft = Matter.Bodies.rectangle(
+  WIDTH - BEAKERWIDTH - styles.beaker.right + (LEFTCOLLIDERWIDTH * 4), (HEIGHT - BEAKERHEIGHT - styles.beaker.bottom) + LEFTCOLLIDERHEIGHT / 2, LEFTCOLLIDERWIDTH, LEFTCOLLIDERHEIGHT,
+  { ...colliderSettings }
+);
+const colliderRight = Matter.Bodies.rectangle(
+  WIDTH - styles.beaker.right - (BEAKERWIDTH - REALBEAKERWIDTH) + (RIGHTCOLLIDERWITH / 2), (HEIGHT - BEAKERHEIGHT - styles.beaker.bottom) + LEFTCOLLIDERHEIGHT / 2, RIGHTCOLLIDERWITH, LEFTCOLLIDERHEIGHT,
+  { ...colliderSettings }
+);
+const colliderBottom = Matter.Bodies.rectangle(
+  WIDTH - BEAKERWIDTH - styles.beaker.right + (BOTTOMCOLLIDERWIDTH / 2), HEIGHT - styles.beaker.bottom, BOTTOMCOLLIDERWIDTH, BOTTOMCOLLIDERHEIGHT,
+  { ...colliderSettings, restitution: 0, label: 'beaker' }
+);
+const ground = Matter.Bodies.rectangle(
+  WIDTH / 2, HEIGHT - styles.beaker.bottom + 15 + HEIGHT, WIDTH * 50, HEIGHT * 2,
+  { isStatic: true, label: 'ground' }
+);
 
 const engine = Matter.Engine.create(),
   world = engine.world,
@@ -186,7 +181,7 @@ class Pill extends PureComponent {
   render() {
     const { body, colors } = this.props;
     return !(body && colors) ? null : (
-      <View style={[styles.pill, {top: body.position.y - PILLHEIGHT, left: body.position.x - PILLwIDTH}]}>
+      <View style={[styles.pill, { top: body.position.y - PILLHEIGHT, left: body.position.x - PILLwIDTH }]}>
         <View style={[styles.side, styles.left, { backgroundColor: colors.left }]} />
         <View style={[styles.side, styles.right, { backgroundColor: colors.right }]} />
       </View>
@@ -199,18 +194,19 @@ class Beaker extends PureComponent {
     return (
       <Image
         style={[styles.beaker]}
-        source={require('./assets/beaker.png')} />
+        source={require('./assets/images/beaker.png')} />
     );
   }
 }
 
 class Persson extends PureComponent {
   render() {
-    const {offset} = this.props; 
+    const { offset, eyebrow } = this.props;
     return (
       <View style={[styles.persson]}>
-        <Image  style={[styles.personBody]} source={require('./assets/pbody.png')}/>
-        <Image style={[styles.perssonHead, offset]} source={require('./assets/phead.png')}/>
+        <Image style={[styles.personBody]} source={require('./assets/images/pbody.png')} />
+        <Image style={[styles.perssonHead, offset]} source={require('./assets/images/phead.png')} />
+        <Image style={[styles.personEyebrow, eyebrow]} source={require('./assets/images/eyebrow.png')} />
       </View>
     )
   }
@@ -230,7 +226,8 @@ export default class App extends PureComponent {
     fontsLoaded: false,
     pillsLeft: MAXSCORE,
     pills: [],
-    personOffset: {}
+    personOffset: {},
+    personEyebrow: {}
   };
 
   constructor(props) {
@@ -240,39 +237,42 @@ export default class App extends PureComponent {
       if (this.state.gameState !== GAMESTATES.started) {
         return;
       }
-      let deltaX = 0;
+      const active = world.bodies.filter(b => b.label === 'pill');
+      if (active && active.length > 0) {
+        let deltaX = 0;
 
-      const move = touches.find(x => x.type === "move"),
-        active = world.bodies.filter(b => b.label === 'pill');
+        const move = touches.find(x => x.type === "move");
 
-      if (move) {
-        deltaX = move.delta.pageX;
-      }
-      active.forEach((b) => {
-        if (!b.isStatic && !b.isSleeping) {
-          if (b.position.y > HEIGHT) {
-            this.removePill(b);
-          } else {
-            Matter.Body.setVelocity(
-              b, {
-                x: deltaX,
-                y: b.velocity.y
+        if (move) {
+          deltaX = move.delta.pageX;
+
+          active.forEach((b) => {
+            if (!b.isStatic && !b.isSleeping) {
+              if (b.position.y > HEIGHT) {
+                this.removePill(b);
+              } else {
+                Matter.Body.setVelocity(
+                  b, {
+                    x: deltaX,
+                    y: b.velocity.y
+                  }
+                );
               }
-            );
-          }
+            }
+          });
         }
-      });
+      }
 
       Matter.Engine.update(engine, time.delta);
     };
   };
 
   removePill = (body) => {
-    this.setState({ pills: this.state.pills.filter(p => p.body.id !== body.id) });  
+    this.setState({ pills: this.state.pills.filter(p => p.body.id !== body.id) });
     Matter.World.remove(world, body);
-  }
+  };
 
-  init = () => {  
+  init = () => {
     world.gravity.y = INITIALGRAVITY;
 
     this.setState({
@@ -281,6 +281,7 @@ export default class App extends PureComponent {
       pillsLeft: MAXSCORE,
       score: 0
     });
+
     setTimeout(this.updatePills, 250);
   };
 
@@ -301,14 +302,53 @@ export default class App extends PureComponent {
       2, 2, -4, 5, -3, 2, -2, 2,
       2, 2, -3, 5, -3, 2, -1, 0,
     ].forEach((v, i) => {
-      setTimeout(() => this.setState({personOffset: {top: styles.perssonHead.top + v}}), 70 * i);
+      setTimeout(() => this.setState({ 
+        personOffset: { top: styles.perssonHead.top + v },
+        personEyebrow: { top: styles.personEyebrow.top + v, transform: [ {rotate: i + 'deg' } ]}
+      }), 70 * i);
     });
+  };
+
+  losingAnimation = () => {
+    [
+      0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6
+    ].forEach((v, i) => {
+      setTimeout(() => this.setState({ 
+        personOffset: { top: styles.perssonHead.top + v },
+        personEyebrow: { top: styles.personEyebrow.top + v, transform: [ {rotate: (-i) + 'deg' } ]} 
+      }), 70 * i);
+    });
+  };
+
+  startAnimation = () => {
+    [
+      -1, -1, -1, -1, -1, -2, -2,
+      -2, -2, -2, -2, -3, -3, -3,
+      -3, -3, -4, -4, -4, -4, -4,
+      -5,
+    ].forEach((v, i) => {
+      setTimeout(() => this.setState({ 
+        personEyebrow: { top: styles.personEyebrow.top + v } 
+      }), 50 * i);
+    });
+  };
+
+  startup = () => {
+    setTimeout(() => {
+      this.startAnimation();
+    }, 2500);
   };
 
   updatePills = (remove = null, isPoint = false) => {
     if (remove) {
       this.removePill(remove);
       world.gravity.y *= DELTASPEED;
+      if (isPoint) {
+        this.setState({ score: this.state.score + 1 });
+        this.playSound('coin');
+      } else {
+        this.playSound('break');
+      }
     }
     if (this.state.pillsLeft > 0) {
       const newPill = makePill();
@@ -318,7 +358,7 @@ export default class App extends PureComponent {
         rightColor = randomColor();
       }
 
-      Matter.Body.setVelocity(newPill, { x: 0, y: world.gravity.y / INITIALGRAVITY});
+      Matter.Body.setVelocity(newPill, { x: 0, y: world.gravity.y / INITIALGRAVITY });
       Matter.World.addBody(world, newPill);
       Matter.Engine.update(engine);
 
@@ -332,29 +372,32 @@ export default class App extends PureComponent {
         gameState: newState
       });
       if (newState === GAMESTATES.won) {
-        setTimeout(this.victoryAnimation, 500);
+        setTimeout(() => {
+          this.playEndingMusic('flagpole');
+          this.victoryAnimation();
+        }, 500);
+      } else {
+        setTimeout(() => {
+          this.playEndingMusic('die');
+          this.losingAnimation();
+        }, 400);
       }
     }
-  }
+  };
 
   componentWillMount() {
     // console.log(engine);
     Matter.Events.on(engine, 'collisionStart', (event) => {
       const pairs = event.pairs;
       if (pairs.length > 0) {
-        const {bodyA, bodyB} = pairs[0];
+        const { bodyA, bodyB } = pairs[0];
         const objA = bodyA.label,
           objB = bodyB.label;
 
         if (objB === 'pill' && objA === 'beaker') {
-          this.setState({ score: this.state.score + 1 });
           this.updatePills(bodyB, true);
         } else if (objB === 'pill' && objA === 'collider') {
-          // let deltaX = Math.random() * 100;
-          // if (bodyA.id === colliderLeft.id) {
-          //   deltaX = -deltaX;
-          // }
-          // Matter.Body.setVelocity(bodyB, { x: bodyB.velocity.x + deltaX, y: bodyB.velocity.y });
+          this.playSound('jump');
         } else if (objB === 'pill' && objA === 'ground') {
           this.updatePills(bodyB);
         }
@@ -365,36 +408,62 @@ export default class App extends PureComponent {
         pills: this.state.pills.map((p) => {
           return {
             ...p,
-            body: {...world.bodies.find(b => b.id === p.body.id)}
+            body: { ...world.bodies.find(b => b.id === p.body.id) }
           }
         })
       });
     });
   }
 
-  mainTheme = null;
-
-  loadMainTheme = async () => {
-    if (!this.mainTheme) {
-      try {
-        this.mainTheme = new Audio.Sound();
-        await this.mainTheme.loadAsync(require('./assets/main.mp3'));
-        await this.mainTheme.setIsLoopingAsync(true);
-      } catch (e) {
-        console.log(e);
-      } 
-    }
+  sounds = {
+    break: { src: require('./assets/audio/break.wav'), obj: new Audio.Sound(), loaded: false, playing: false },
+    coin: { src: require('./assets/audio/coin.wav'), obj: new Audio.Sound(), loaded: false, playing: false },
+    theme: { src: require('./assets/audio/main.mp3'), obj: new Audio.Sound(), loaded: false, playing: false },
+    die: { src: require('./assets/audio/die.wav'), obj: new Audio.Sound(), loaded: false, playing: false },
+    flagpole: { src: require('./assets/audio/flagpole.wav'), obj: new Audio.Sound(), loaded: false, playing: false },
+    jump: { src: require('./assets/audio/jump.wav'), obj: new Audio.Sound(), loaded: false, playing: false },
   };
 
-  playMainTheme = async () => {
+  async playSound(name, pause = null, loop = false, volume = 0.9) {
+    if (this.sounds[name].playing) {
+      return;
+    }
+    if (pause) {
+      await this.pauseSound(pause);
+    } 
     try {
-      await this.loadMainTheme();
-      await this.mainTheme.playAsync({ shouldPlay: true });
-      // Your sound is playing!
-    } catch (error) {
-      // An error occurred!
+      this.sounds[name].playing = true;
+      if (!this.sounds[name].loaded) {
+        await this.sounds[name].obj.loadAsync(this.sounds[name].src);
+        await this.sounds[name].obj.setVolumeAsync(volume);
+        await this.sounds[name].obj.setIsLoopingAsync(loop);
+        this.sounds[name].loaded = true;
+      }
+      await this.sounds[name].obj.playFromPositionAsync(0);  
+      this.sounds[name].playing = false;
+    } catch (e) {
+      console.log(e);
     }
   };
+
+  async pauseSound(name) {
+    if (!this.sounds[name].loaded) {
+      return;
+    }
+    try {
+      await this.sounds[name].obj.pauseAsync();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async playMainTheme() {
+    await this.playSound('theme', null, true, 0.5);
+  };
+
+  async playEndingMusic(sound = 'die') {
+    await this.playSound(sound, null, false, 1.0);
+  }
 
   async componentDidMount() {
     await Font.loadAsync({
@@ -403,22 +472,23 @@ export default class App extends PureComponent {
     });
     await this.playMainTheme();
     this.setState({ fontsLoaded: true });
+    this.startup();
   }
 
   startscreen = () => {
     return !this.state.fontsLoaded ? <Text>Loading...</Text> : (
-        <View style={[styles.text, { top: HEIGHT / 3 }]}>
-          <Text style={{ textAlign: 'center', fontSize: 48, fontFamily: 'space-grotesk-bold' }}>
-            dr. persson
+      <View style={[styles.text, { top: HEIGHT / 3 }]}>
+        <Text style={{ textAlign: 'center', fontSize: 48, fontFamily: 'space-grotesk-bold' }}>
+          dr. persson
           </Text>
-          <TouchableHighlight onPress={this.start}>
-            <View style={{ backgroundColor: '#fff', padding: 15, paddingBottom: 20, margin: 15 }}>
-              <Text style={{ textAlign: 'center', fontSize: 32, fontFamily: 'space-grotesk-regular' }}>
-                start game
+        <TouchableHighlight onPress={this.start}>
+          <View style={{ backgroundColor: '#fff', padding: 15, paddingBottom: 20, margin: 15 }}>
+            <Text style={{ textAlign: 'center', fontSize: 32, fontFamily: 'space-grotesk-regular' }}>
+              start game
                 </Text>
-            </View>
-          </TouchableHighlight>
-        </View>
+          </View>
+        </TouchableHighlight>
+      </View>
     );
   };
 
@@ -468,28 +538,29 @@ export default class App extends PureComponent {
   }
 
   bodyToView = (body) => {
-    return {position: 'absolute', backgroundColor: '#f00'};
+    return { position: 'absolute', backgroundColor: '#f00' };
   }
 
   render() {
-    const state = this.state.gameState;
+    const state = this.state.gameState,
+      gameover = state === GAMESTATES.won || state === GAMESTATES.lost;
     return (
       <GameLoop style={styles.container} onUpdate={this.updateHandler}>
-        {state !== GAMESTATES.won ? null : 
-          <Persson offset={this.state.personOffset} />
+        {state === GAMESTATES.started ? null :
+          <Persson offset={this.state.personOffset} eyebrow={this.state.personEyebrow} />
         }
         {state !== GAMESTATES.init ? null : this.startscreen()}
-        {state !== GAMESTATES.won && state !== GAMESTATES.lost ? null : this.gameover()}
+        {!gameover ? null : this.gameover()}
         {state !== GAMESTATES.started ? null : this.scoreboard()}
         {this.state.pills.map((p, i) => {
-          return (<Pill key={'pill-' + i} style={{transform: [{rotate: p.body.angle + 'rad'}]}} body={p.body} colors={p.colors} />);
+          return (<Pill key={'pill-' + i} style={{ transform: [{ rotate: p.body.angle + 'rad' }] }} body={p.body} colors={p.colors} />);
         })}
 
-        {state !== GAMESTATES.started ? null : 
+        {state !== GAMESTATES.started ? null :
           <Beaker />
         }
-        {state !== GAMESTATES.started ? null : 
-          <View style={{position: 'absolute', left: 0, bottom: 0, width: WIDTH, height: styles.beaker.bottom - 5, backgroundColor: '#fff'}}/>
+        {state !== GAMESTATES.started ? null :
+          <View style={{ position: 'absolute', left: 0, bottom: 0, width: WIDTH, height: styles.beaker.bottom - 5, backgroundColor: '#fff' }} />
         }
       </GameLoop>
     );

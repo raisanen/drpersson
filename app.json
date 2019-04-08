@@ -2,6 +2,7 @@
   "expo": {
     "name": "Dr. Persson",
     "slug": "DrPersson",
+    "githubUrl": "https://github.com/raisanen/drpersson",
     "privacy": "public",
     "sdkVersion": "32.0.0",
     "platforms": [
@@ -27,7 +28,14 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.fivebyfive.drpersson"
+      "package": "com.fivebyfive.drpersson",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffff00"
+      }
+    },
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#ffff00"
     }
   }
 }

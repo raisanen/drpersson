@@ -30,8 +30,10 @@
     "android": {
       "package": "com.fivebyfive.drpersson",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffff00"
-      }
+      },
+      "permissions": []
     },
     "androidStatusBar": {
       "barStyle": "dark-content",

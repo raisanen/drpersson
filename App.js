@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { StyleSheet, Text, View, TouchableHighlight } from 'react-native';
+import { StyleSheet, Text, View, TouchableHighlight, Button } from 'react-native';
 import { GameLoop } from 'react-native-game-engine';
 import { Font } from 'expo';
 import Matter from "matter-js";
@@ -35,21 +35,30 @@ const styles = StyleSheet.create({
   footer: {
     bottom: 5,
     left: 15,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-start'
   },
   footerButton: {
-    fontFamily: 'space-grotesk-bold',
-    padding: 10,
+    fontFamily: 'icomoon',
+    fontSize: 20,
+    padding: 5,
+    paddingBottom: 10,
+    width: 50
+  },
+  icon: {
+    fontFamily: 'icomoon'
   }
 });
 
 const numToText = (n) => {
   const uptonineteen = [
-      'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
-      'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
-    ],
-    aftertwentyparts = [ '', '-one', '-two', '-three', '-four', '-five', '-six', '-seven', '-eight', '-nine' ],
+    'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+  ],
+    aftertwentyparts = ['', '-one', '-two', '-three', '-four', '-five', '-six', '-seven', '-eight', '-nine'],
     tens = ['twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'],
-    translate = [ ...uptonineteen ];
+    translate = [...uptonineteen];
 
   tens.forEach(t => aftertwentyparts.forEach(a => translate.push(`${t}${a}`)));
 
@@ -83,16 +92,17 @@ export default class App extends PureComponent {
     pills: [],
     personOffset: {},
     personEyebrow: {},
-    themePlaying: false
+    themePlaying: false,
+    paused: false,
   };
-  
+
   soundPlayer = new PerssonPlayer();
 
   constructor(props) {
     super(props);
 
     this.updateHandler = ({ touches, screen, time }) => {
-      if (this.state.gameState !== GAMESTATES.started) {
+      if (this.state.gameState !== GAMESTATES.started || this.state.paused) {
         return;
       }
       const active = world.bodies.filter(b => b.label === 'pill');
@@ -111,6 +121,13 @@ export default class App extends PureComponent {
                   y: b.velocity.y
                 }
               );
+            } else {
+              Matter.Body.setPosition(
+                b, {
+                  x: b.position.x < 0 ? (WIDTH - b.position.x) : b.position.x % WIDTH,
+                  y: b.position.y
+                }
+              )
             }
           }
         });
@@ -120,7 +137,7 @@ export default class App extends PureComponent {
     };
   };
 
-  
+
   componentWillMount() {
     Matter.Events.on(engine, 'collisionStart', (event) => {
       const pairs = event.pairs;
@@ -154,9 +171,9 @@ export default class App extends PureComponent {
   async componentDidMount() {
     await Font.loadAsync({
       'space-grotesk-bold': require('./assets/fonts/SpaceGrotesk-Bold.ttf'),
-      'space-grotesk-regular': require('./assets/fonts/SpaceGrotesk-Regular.ttf')
+      'space-grotesk-regular': require('./assets/fonts/SpaceGrotesk-Regular.ttf'),
+      'icomoon': require('./assets/fonts/IcoMoon-Free.ttf')
     });
-
 
     this.setState({ fontsLoaded: true });
     this.playTheme();
@@ -164,7 +181,7 @@ export default class App extends PureComponent {
     setTimeout(() => this.started(), 3000);
   }
 
-  
+
   init = () => {
     world.gravity.y = INITIALGRAVITY;
     this.setState({
@@ -228,9 +245,9 @@ export default class App extends PureComponent {
       2, 2, -4, 5, -3, 2, -2, 2,
       2, 2, -3, 5, -3, 2, -1, 0,
     ].forEach((v, i) => {
-      setTimeout(() => this.setState({ 
+      setTimeout(() => this.setState({
         personOffset: { top: componentStyles.perssonHead.top + v },
-        personEyebrow: { top: componentStyles.personEyebrow.top + v, transform: [ {rotate: i + 'deg' } ]}
+        personEyebrow: { top: componentStyles.personEyebrow.top + v, transform: [{ rotate: i + 'deg' }] }
       }), 70 * i);
     });
   };
@@ -241,9 +258,9 @@ export default class App extends PureComponent {
     [
       0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6
     ].forEach((v, i) => {
-      setTimeout(() => this.setState({ 
+      setTimeout(() => this.setState({
         personOffset: { top: componentStyles.perssonHead.top + v },
-        personEyebrow: { top: componentStyles.personEyebrow.top + v, transform: [ {rotate: (-i) + 'deg' } ]} 
+        personEyebrow: { top: componentStyles.personEyebrow.top + v, transform: [{ rotate: (-i) + 'deg' }] }
       }), 70 * i);
     });
   };
@@ -255,8 +272,8 @@ export default class App extends PureComponent {
       -3, -3, -4, -4, -4, -4, -4,
       -5,
     ].forEach((v, i) => {
-      setTimeout(() => this.setState({ 
-        personEyebrow: { top: componentStyles.personEyebrow.top + v } 
+      setTimeout(() => this.setState({
+        personEyebrow: { top: componentStyles.personEyebrow.top + v }
       }), 50 * i);
     });
   };
@@ -271,10 +288,15 @@ export default class App extends PureComponent {
     this.soundPlayer.pause('theme');
   };
 
+  toggleGamePaused = () => {
+    runner.enabled = this.state.paused;
+    this.setState({ paused: !this.state.paused });
+  }
+
   // Subcomponents
   startscreen = () => {
     return !(this.state.fontsLoaded)
-      ? <Text>Loading...</Text> 
+      ? <Text>Loading...</Text>
       : (
         <View style={[styles.text, { top: HEIGHT / 3 }]}>
           <Text style={{ textAlign: 'center', fontSize: 48, fontFamily: 'space-grotesk-bold' }}>
@@ -284,7 +306,7 @@ export default class App extends PureComponent {
             <View style={{ backgroundColor: '#fff', padding: 15, paddingBottom: 20, margin: 15 }}>
               <Text style={{ textAlign: 'center', fontSize: 32, fontFamily: 'space-grotesk-regular' }}>
                 start game
-                  </Text>
+              </Text>
             </View>
           </TouchableHighlight>
         </View>
@@ -325,11 +347,15 @@ export default class App extends PureComponent {
   footer = () => {
     return !(this.state.fontsLoaded) ? null : (
       <View style={[styles.text, styles.footer]}>
-          <TouchableHighlight onPress={this.state.themePlaying ? this.pauseTheme : this.playTheme}>
-          <Text style={styles.footerButton}>
-            {this.state.themePlaying ? 'no music' : 'music'}
-          </Text>
-        </TouchableHighlight>
+        <Text onPress={this.state.themePlaying ? this.pauseTheme : this.playTheme}
+          style={[styles.footerButton]}>
+            {this.state.themePlaying ? 'volume5' : 'volume2'}
+        </Text>
+        <Text
+          onPress={() => this.toggleGamePaused()}
+          style={[styles.footerButton]}>
+            {this.state.paused ? 'play3' : 'pause2'}
+        </Text>
       </View>
     )
   }
@@ -342,15 +368,15 @@ export default class App extends PureComponent {
         {this.state.gameState === GAMESTATES.init && this.startscreen()}
         {this.gameover()}
 
-        {state === GAMESTATES.started 
+        {state === GAMESTATES.started
           ? this.scoreboard()
-          :  <Persson offset={this.state.personOffset} eyebrow={this.state.personEyebrow} />
+          : <Persson offset={this.state.personOffset} eyebrow={this.state.personEyebrow} />
         }
         {this.state.pills.map((p, i) => {
           return (<Pill key={'pill-' + i} body={p.body} colors={p.colors} />);
         })}
-        {state === GAMESTATES.started && <Beaker/>}
-        {state === GAMESTATES.started && <Ground/>}
+        {state === GAMESTATES.started && <Beaker />}
+        {state === GAMESTATES.started && <Ground />}
         {state === GAMESTATES.started && this.footer()}
       </GameLoop>
     );
